@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RSS to HTML Converter</title>
+    <style>
+      #output {
+        width: 500px;
+        height: 200px; /* Same height as your textarea */
+        overflow: auto;
+        border: 1px solid #ccc;
+        position: relative;
+      }
+      #copyButton {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Jost", sans-serif;
+        background: white;
+        font-weight: 500;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      #convertButton {
+        background-color: #fddb34;
+        font-family: "Jost", sans-serif;
+        width: 200px;
+        padding: 5px 10px;
+        border-color: #fddb34;
+        margin-top: 15px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .main-container-title {
+        font-family: "Jost", sans-serif;
+        padding-top: 24px;
+      }
+      .main-container-text {
+        font-family: "Jost", sans-serif;
+      }
+      .main-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        width: 500px;
+      }
+      .output-container {
+        margin-top: 48px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="main-container-title">RSS to HTML Snippet Converter</h1>
+    <div class="main-container">
+      <p class="main-container-text">Please enter your RSS Feed Blog Snippet</p>
+      <textarea
+        id="rssInput"
+        rows="10"
+        cols="50"
+        style="height: 200px"
+      ></textarea>
+      <button id="convertButton">Convert</button>
+    </div>
+
+    <div class="output-container">
+      <p class="main-container-text">
+        Your RSS Blog Feed Snippet ready for Brevo
+      </p>
+      <div id="output">
+        <button id="copyButton">
+          <svg
+            width="19"
+            height="19"
+            viewBox="0 0 76 88"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style="margin-right: 5px"
+          >
+            <path
+              d="M56 0H8C3.6 0 0 3.6 0 8V64H8V8H56V0ZM68 16H24C19.6 16 16 19.6 16 24V80C16 84.4 19.6 88 24 88H68C72.4 88 76 84.4 76 80V24C76 19.6 72.4 16 68 16ZM68 80H24V24H68V80Z"
+              fill="black"
+            />
+          </svg>
+          Copy
+        </button>
+
+        <pre id="preOutput"></pre>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const convertButton = document.getElementById("convertButton");
+        const rssInput = document.getElementById("rssInput");
+        const output = document.getElementById("output");
+        const preOutput = document.getElementById("preOutput"); // New line
+        const copyButton = document.getElementById("copyButton"); // New line
+
+        convertButton.addEventListener("click", () => {
+          const xmlString = rssInput.value;
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+
+          const item = xmlDoc.querySelector("item");
+          const html = convertRSSItemToHTML(item);
+
+          // Display raw HTML
+          preOutput.textContent = html; // Modified line
+        });
+
+        // New block for copy functionality
+        copyButton.addEventListener("click", () => {
+          navigator.clipboard
+            .writeText(preOutput.textContent)
+            .then(() => {
+              alert("Copied to clipboard");
+            })
+            .catch((err) => {
+              alert("Failed to copy text: ", err);
+            });
+        });
+      });
+
+      function convertRSSItemToHTML(item) {
+        const title = item.querySelector("title").textContent;
+        const link = item.querySelector("link").textContent;
+        const author = item.querySelector("dc\\:creator, creator").textContent;
+        const description = item.querySelector("description").textContent;
+        const featuredImage = item.querySelector("featuredImage").textContent;
+
+        let label = "";
+        if (title.includes("[New]")) {
+          label = '<span class="new-label">Neu</span>';
+        } else if (title.includes("[Updated]")) {
+          label = '<span class="new-label">Updated</span>';
+        }
+
+        const cleanTitle = title.replace("[New]", "").replace("[Updated]", "");
+
+        if (featuredImage) {
+          return `
+          <style>
+    .flex-container {
+      display: flex;
+      flex-direction: row;
+    }
+    .flex-item-2 {
+      flex: 2;
+      padding-right: 20px;
+    }
+    .flex-item-1 {
+      flex: 1;
+
+    }
+    .blog-title {
+      font-size: 14px;
+      color: #888888;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .author {
+      font-size: 12px;
+      color: #888888;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+    .main-heading {
+      font-size: 20px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+    .new-label {
+      background: black;
+      color: white;
+      font-weight: 500;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 24px;
+      position: relative;
+      top: -3px;
+      right: -5px;
+    }
+    .main-paragraph {
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 400;
+      margin: 8px 0 8px;
+    }
+    .read-more {
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 500;
+      margin: 8px 0 8px;
+color: #000000;
+
+    }
+    .image {
+      width: 100%;
+    }
+
+    /* Media Query for Mobile Devices */
+    @media (max-width: 768px) {
+      .flex-container {
+        flex-direction: column-reverse;
+      }
+      .flex-item-2 {
+        padding-right: 0;
+padding-top: 20px;
+      }
+    }
+  </style>
+      <div class="flex-container">
+        <div class="flex-item-2">
+          <p class="blog-title">Blog</p>
+          <h2 class="main-heading">${cleanTitle} ${label}</h2>
+          <p class="author">${author}</p>
+          <p class="main-paragraph">${description}</p>
+          <a class="read-more" href="${link}">Weiterlesen</a>
+        </div>
+        <div class="flex-item-1">
+          <img class="image" src="${featuredImage}"/>
+        </div>
+      </div>
+    `;
+        } else {
+          return `
+          <style>
+    .type{
+      font-size: 14px;
+      color: #888888;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .main-heading {
+      font-size: 20px;
+      line-height: 1.4;
+      font-weight: 700;
+      padding: 0 0 3px;
+    }
+    .main-paragraph {
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 400;
+      margin: 8px 0 8px;
+    }
+    .read-more {
+      font-size: 14px;
+      font-weight: 500;
+color: #000000;
+
+    }
+  </style>
+      <p class="type">Blog</p>
+      <h2 class="main-heading">${cleanTitle} ${label}</h2>
+      <p class="main-paragraph">${description}</p>
+      <a class="read-more" href="${link}">Weiterlesen</a>
+    `;
+        }
+      }
+
+      // Usage
+      const items = xmlDoc.querySelectorAll("item");
+      items.forEach((item) => {
+        const html = convertRSSItemToHTML(item);
+        // Append `html` to your container
+      });
+    </script>
+  </body>
+</html>
